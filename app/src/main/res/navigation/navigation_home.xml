@@ -34,11 +34,11 @@
         android:id="@+id/inboxFragment"
         android:name="com.example.bookclub.ui.inbox.InboxFragment"
         android:label="Inbox">
+
         <action
             android:id="@+id/actionInboxFragmentToClubDetailFragment"
             app:destination="@id/clubDetailFragment" />
     </fragment>
-
 
     <!-- Profile -->
     <fragment
@@ -59,7 +59,7 @@
             app:destination="@id/clubDetailFragment" />
     </fragment>
 
-    <!-- Club Detail (primește titlu + cover) -->
+    <!-- Club Detail -->
     <fragment
         android:id="@+id/clubDetailFragment"
         android:name="com.example.bookclub.ui.club.ClubDetailFragment"
@@ -79,6 +79,27 @@
             android:name="coverUrl"
             app:argType="string"
             android:defaultValue="" />
+
+        <action
+            android:id="@+id/action_clubDetailFragment_to_clubReviewFragment"
+            app:destination="@id/clubReviewFragment" />
+    </fragment>
+
+    <!-- Club Review -->
+    <fragment
+        android:id="@+id/clubReviewFragment"
+        android:name="com.example.bookclub.ui.club.ClubReviewFragment"
+        android:label="Review Club"
+        tools:layout="@layout/fragment_club_review">
+
+        <argument
+            android:name="clubId"
+            app:argType="long" />
+
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
     <!-- Book Detail -->
@@ -87,10 +108,24 @@
         android:name="com.example.bookclub.ui.books.BookDetailFragment"
         android:label="Book Detail">
 
-        <argument android:name="workId"   app:argType="string" />
-        <argument android:name="title"    app:argType="string" android:defaultValue="" />
-        <argument android:name="author"   app:argType="string" android:defaultValue="" />
-        <argument android:name="coverUrl" app:argType="string" android:defaultValue="" />
+        <argument
+            android:name="workId"
+            app:argType="string" />
+
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="author"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="coverUrl"
+            app:argType="string"
+            android:defaultValue="" />
 
         <action
             android:id="@+id/action_bookDetailFragment_to_createBookClubFragment"
@@ -103,10 +138,24 @@
         android:name="com.example.bookclub.ui.club.CreateBookClubFragment"
         android:label="Create Club">
 
-        <argument android:name="workId"   app:argType="string" />
-        <argument android:name="title"    app:argType="string" android:defaultValue="" />
-        <argument android:name="author"   app:argType="string" android:defaultValue="" />
-        <argument android:name="coverUrl" app:argType="string" android:defaultValue="" />
+        <argument
+            android:name="workId"
+            app:argType="string" />
+
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="author"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="coverUrl"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
 </navigation>

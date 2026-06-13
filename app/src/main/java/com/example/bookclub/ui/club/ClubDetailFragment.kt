@@ -13,6 +13,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,9 +36,9 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
 
     private var replyTo: ClubComment? = null
 
-    private val expanded = mutableSetOf<Long>()                        // parentId-uri expandate
-    private val repliesCache = mutableMapOf<Long, List<ClubComment>>() // parentId -> lista replici
-    private val repliesCount = mutableMapOf<Long, Int>()               // parentId -> număr replici
+    private val expanded = mutableSetOf<Long>()
+    private val repliesCache = mutableMapOf<Long, List<ClubComment>>()
+    private val repliesCount = mutableMapOf<Long, Int>()
 
     private lateinit var adapter: ThreadedCommentsAdapter
     private var latestParents: List<ClubComment> = emptyList()
@@ -51,16 +52,33 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
 
         // Header
         val imgCover: ImageView = view.findViewById(R.id.imgCover)
-        val tvTitle: TextView   = view.findViewById(R.id.tvTitle)
+        val tvTitle: TextView = view.findViewById(R.id.tvTitle)
+
         tvTitle.text = args.title
+
         imgCover.load(args.coverUrl) {
             placeholder(R.drawable.ic_book_placeholder)
             error(R.drawable.ic_book_placeholder)
             crossfade(true)
         }
 
+        // Buton nou: Leave Review
+        val btnLeaveReview: Button = view.findViewById(R.id.btnLeaveReview)
+
+        btnLeaveReview.setOnClickListener {
+            val bundle = Bundle().apply {
+                putLong("clubId", args.clubId)
+                putString("title", args.title)
+            }
+
+            findNavController().navigate(
+                R.id.clubReviewFragment,
+                bundle
+            )
+        }
+
         // Reply bar
-        val replyBar: View         = view.findViewById(R.id.replyBar)
+        val replyBar: View = view.findViewById(R.id.replyBar)
         val tvReplyingTo: TextView = view.findViewById(R.id.tvReplyingTo)
         val btnCancelReply: Button = view.findViewById(R.id.btnCancelReply)
 
@@ -69,33 +87,43 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
             replyBar.isVisible = false
             tvReplyingTo.text = ""
         }
-        btnCancelReply.setOnClickListener { clearReply() }
+
+        btnCancelReply.setOnClickListener {
+            clearReply()
+        }
 
         // Recycler + adapter
         val recycler: RecyclerView = view.findViewById(R.id.recyclerComments)
+
         adapter = ThreadedCommentsAdapter(
             onReplyClick = { comment ->
                 if (!commentsAllowed) {
-                    notAllowedReason?.let { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
+                    notAllowedReason?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                    }
                     return@ThreadedCommentsAdapter
                 }
+
                 replyTo = comment
+
                 tvReplyingTo.text = getString(
                     R.string.replying_to_fmt,
                     comment.authorName ?: getString(R.string.anonymous)
                 )
+
                 replyBar.isVisible = true
             },
             onToggleParent = { parentId, currentlyExpanded ->
                 toggleParent(parentId, currentlyExpanded)
             }
         )
+
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
 
         // Input & send
         val etComment: EditText = view.findViewById(R.id.etComment)
-        val btnSend: Button     = view.findViewById(R.id.btnSend)
+        val btnSend: Button = view.findViewById(R.id.btnSend)
 
         // Zone vizibile pentru toggle
         val commentSection: View = view.findViewById(R.id.commentSection)
@@ -110,26 +138,33 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
         val session = ServiceLocator.sessionManager(requireContext()).get()
         val repo = ServiceLocator.clubsRepository(requireContext())
 
-        // determină dacă poate comenta (logat + membru + club LIVE)
+        // Determină dacă poate comenta: logat + membru + club LIVE
         viewLifecycleOwner.lifecycleScope.launch {
             val sessionOk = session != null
             val userId = session?.userId
 
-            val club = withContext(Dispatchers.IO) { repo.getClub(args.clubId) }
+            val club = withContext(Dispatchers.IO) {
+                repo.getClub(args.clubId)
+            }
 
             val liveOk = club != null &&
                     club.status == ClubStatus.LIVE &&
-                    repo.isLive(club!!)
+                    repo.isLive(club)
 
             val memberOk = if (userId != null && club != null) {
-                withContext(Dispatchers.IO) { repo.isMember(userId, club.id) }
-            } else false
+                withContext(Dispatchers.IO) {
+                    repo.isMember(userId, club.id)
+                }
+            } else {
+                false
+            }
 
             commentsAllowed = sessionOk && liveOk && memberOk
+
             notAllowedReason = when {
                 !sessionOk -> getString(R.string.err_not_logged_in)
                 club == null -> getString(R.string.err_club_not_found)
-                !liveOk -> getString(R.string.comments_disabled) // “Comments are available only when the club is LIVE.”
+                !liveOk -> getString(R.string.comments_disabled)
                 !memberOk -> getString(R.string.err_only_members_comment)
                 else -> null
             }
@@ -158,15 +193,24 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
             }
 
             val content = etComment.text?.toString()?.trim().orEmpty()
-            if (content.isEmpty()) return@setOnClickListener
+
+            if (content.isEmpty()) {
+                return@setOnClickListener
+            }
 
             val userId = session?.userId
+
             if (userId == null) {
-                Toast.makeText(requireContext(), getString(R.string.err_not_logged_in), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.err_not_logged_in),
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
             val parentId = replyTo?.id
+
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     vm.addCommentAwait(
@@ -184,8 +228,11 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
                         refreshReplies(parentId)
                     }
                 } catch (t: Throwable) {
-                    // arată mesajul de la repo (ex. “Only members…”, “Comments allowed only for LIVE…”)
-                    Toast.makeText(requireContext(), t.message ?: getString(R.string.err_comment_failed), Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        t.message ?: getString(R.string.err_comment_failed),
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -203,17 +250,25 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
         }
     }
 
-    /** Re-încarcă replicile unui părinte și reconstruiește lista. */
+    /**
+     * Re-încarcă replicile unui părinte și reconstruiește lista.
+     */
     private fun refreshReplies(parentId: Long) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val replies = withContext(Dispatchers.IO) { vm.fetchReplies(parentId) }
+            val replies = withContext(Dispatchers.IO) {
+                vm.fetchReplies(parentId)
+            }
+
             repliesCache[parentId] = replies
             repliesCount[parentId] = replies.size
+
             buildAndShowThread()
         }
     }
 
-    /** Expand / Collapse pentru un părinte. */
+    /**
+     * Expand / Collapse pentru un părinte.
+     */
     private fun toggleParent(parentId: Long, currentlyExpanded: Boolean) {
         viewLifecycleOwner.lifecycleScope.launch {
             if (currentlyExpanded) {
@@ -221,17 +276,24 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
                 buildAndShowThread()
             } else {
                 expanded.add(parentId)
+
                 if (!repliesCache.containsKey(parentId)) {
-                    val replies = withContext(Dispatchers.IO) { vm.fetchReplies(parentId) }
+                    val replies = withContext(Dispatchers.IO) {
+                        vm.fetchReplies(parentId)
+                    }
+
                     repliesCache[parentId] = replies
                     repliesCount[parentId] = replies.size
                 }
+
                 buildAndShowThread()
             }
         }
     }
 
-    /** Convertește părinți + (opțional) copii în listă plată de ThreadItem pentru adapter. */
+    /**
+     * Convertește părinți + copii în listă plată de ThreadItem pentru adapter.
+     */
     private fun buildAndShowThread() {
         val items = mutableListOf<ThreadItem>()
 
@@ -252,7 +314,10 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val c = vm.countReplies(parent.id)
                     repliesCount[parent.id] = c
-                    withContext(Dispatchers.Main) { buildAndShowThread() }
+
+                    withContext(Dispatchers.Main) {
+                        buildAndShowThread()
+                    }
                 }
             }
         }

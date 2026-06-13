@@ -19,6 +19,7 @@ import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import com.example.bookclub.data.db.dao.ClubReviewDao
 
 // Room DB: declarare entitati, DAO, TypeConverters; configurare builder si seed
 @Database(
@@ -30,9 +31,10 @@ import kotlinx.coroutines.withContext
         VoteEntity::class,
         FollowUserEntity::class,
         FollowBookEntity::class,
-        InboxEntity::class
+        InboxEntity::class,
+        ClubReviewEntity::class
     ],
-    version = 2, // versiune crescută după adăugarea BookClubEntity si autentificare
+    version = 3, // versiune crescută după adăugarea ClubReviewEntity
     exportSchema = true
 )
 // clasa principala RoomDatabase
@@ -46,6 +48,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun followUserDao(): FollowUserDao
     abstract fun followBookDao(): FollowBookDao
     abstract fun inboxDao(): InboxDao
+
+    abstract fun clubReviewDao(): ClubReviewDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null

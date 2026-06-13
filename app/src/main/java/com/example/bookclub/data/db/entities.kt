@@ -100,3 +100,20 @@ data class InboxEntity(
     val isRead: Boolean,
     val createdAt: Instant
 )
+
+@Entity(
+    tableName = "club_review",
+    indices = [
+        Index("clubId"),
+        Index("reviewerUserId")
+    ]
+)
+data class ClubReviewEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val clubId: Long,
+    val reviewerUserId: Long,
+    val rating: Int,
+    val comment: String,
+    val createdAt: Instant
+)

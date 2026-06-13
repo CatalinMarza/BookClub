@@ -5,6 +5,7 @@ import com.example.bookclub.data.db.AppDatabase
 import com.example.bookclub.data.repository.*
 import com.example.bookclub.data.session.SessionManager
 
+
 // expune singletons pentru DB, repositories si session
 object ServiceLocator {
     fun db(context: Context) = AppDatabase.get(context)
@@ -36,4 +37,7 @@ object ServiceLocator {
 
     fun sessionManager(context: Context) =
         SessionManager(context)
+
+    fun clubReviewRepository(context: Context) =
+        ClubReviewRepository(db(context).clubReviewDao())
 }
