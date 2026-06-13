@@ -34,7 +34,7 @@ import com.example.bookclub.data.db.dao.ClubReviewDao
         InboxEntity::class,
         ClubReviewEntity::class
     ],
-    version = 3, // versiune crescută după adăugarea ClubReviewEntity
+    version = 4, // versiune crescută după modificarea ClubReviewEntity
     exportSchema = true
 )
 // clasa principala RoomDatabase

@@ -24,10 +24,10 @@ class ClubReviewFragment : Fragment(R.layout.fragment_club_review) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val tvClubTitle = view.findViewById<TextView>(R.id.tvClubTitle)
-        val ratingBar = view.findViewById<RatingBar>(R.id.ratingBar)
-        val etComment = view.findViewById<EditText>(R.id.etReviewComment)
-        val btnSubmit = view.findViewById<Button>(R.id.btnSubmitReview)
+        val tvClubTitle: TextView = view.findViewById(R.id.tvClubTitle)
+        val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
+        val etComment: EditText = view.findViewById(R.id.etReviewComment)
+        val btnSubmit: Button = view.findViewById(R.id.btnSubmitReview)
 
         clubId = arguments?.getLong("clubId") ?: -1L
         clubTitle = arguments?.getString("title") ?: ""
@@ -50,6 +50,24 @@ class ClubReviewFragment : Fragment(R.layout.fragment_club_review) {
 
         val clubsRepository = ServiceLocator.clubsRepository(requireContext())
         val reviewRepository = ServiceLocator.clubReviewRepository(requireContext())
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val alreadyReviewed = withContext(Dispatchers.IO) {
+                reviewRepository.hasUserReviewedClub(
+                    clubId = clubId,
+                    userId = session.userId
+                )
+            }
+
+            if (alreadyReviewed) {
+                Toast.makeText(
+                    requireContext(),
+                    "You already reviewed this club",
+                    Toast.LENGTH_SHORT
+                ).show()
+                findNavController().popBackStack()
+            }
+        }
 
         btnSubmit.setOnClickListener {
             val rating = ratingBar.rating.toInt()

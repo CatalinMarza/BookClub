@@ -104,8 +104,9 @@ data class InboxEntity(
 @Entity(
     tableName = "club_review",
     indices = [
-        Index("clubId"),
-        Index("reviewerUserId")
+        Index(value = ["clubId"]),
+        Index(value = ["reviewerUserId"]),
+        Index(value = ["clubId", "reviewerUserId"], unique = true)
     ]
 )
 data class ClubReviewEntity(

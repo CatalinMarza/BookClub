@@ -16,6 +16,13 @@ class ClubReviewRepository(
     fun reviewCountForClub(clubId: Long) =
         dao.getReviewCountForClub(clubId)
 
+    suspend fun hasUserReviewedClub(
+        clubId: Long,
+        userId: Long
+    ): Boolean {
+        return dao.hasUserReviewedClub(clubId, userId)
+    }
+
     suspend fun addReview(
         clubId: Long,
         reviewerUserId: Long,
@@ -30,7 +37,12 @@ class ClubReviewRepository(
             throw IllegalArgumentException("Comment cannot be empty")
         }
 
-        if (dao.hasUserReviewedClub(clubId, reviewerUserId)) {
+        val alreadyReviewed = dao.hasUserReviewedClub(
+            clubId = clubId,
+            userId = reviewerUserId
+        )
+
+        if (alreadyReviewed) {
             throw IllegalStateException("You already reviewed this club")
         }
 
