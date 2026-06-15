@@ -7,6 +7,7 @@
     <string name="go_to_register">Go To Register</string>
     <string name="register">Register</string>
     <string name="hint_write_your_email_here">Write your email here…</string>
+    <string name="already_have_account_login">Already have an account? Login</string>
 
     <!-- HOME -->
     <string name="home">Home</string>

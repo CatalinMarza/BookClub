@@ -13,6 +13,7 @@ class AuthRepository(private val userDao: UserDao) {
         if (existing != null) throw IllegalStateException("Email already in use")
         val now = Instant.now()
         val entity = UserEntity(
+            firebaseUid = null,
             email = normalizedEmail,
             password = PasswordHasher.sha256(password),
             nickname = nickname.trim(),

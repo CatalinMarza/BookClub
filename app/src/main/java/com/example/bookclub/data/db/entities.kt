@@ -5,10 +5,17 @@ import com.example.bookclub.data.model.ClubStatus
 import java.time.Instant
 
 // Entitati Room (tabele) si indecsi
-@Entity(tableName = "user",
-    indices = [Index("email", unique = true), Index("nickname", unique = true)])
+@Entity(
+    tableName = "user",
+    indices = [
+        Index("email", unique = true),
+        Index("nickname", unique = true),
+        Index("firebaseUid", unique = true)
+    ]
+)
 data class UserEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val firebaseUid: String?,
     val email: String,
     val password: String,
     val nickname: String,

@@ -34,7 +34,7 @@ import com.example.bookclub.data.db.dao.ClubReviewDao
         InboxEntity::class,
         ClubReviewEntity::class
     ],
-    version = 4, // versiune crescută după modificarea ClubReviewEntity
+    version = 5, // versiune crescută după modificarea FireBase
     exportSchema = true
 )
 // clasa principala RoomDatabase
@@ -76,6 +76,7 @@ abstract class AppDatabase : RoomDatabase() {
                     val now = Instant.now()
                     db.userDao().insert(
                         UserEntity(
+                            firebaseUid = null,
                             email = "admin@demo.local",
                             password = PasswordHasher.sha256("admin123"),
                             nickname = "admin",
@@ -85,6 +86,7 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     db.userDao().insert(
                         UserEntity(
+                            firebaseUid = null,
                             email = "alice@demo.local",
                             password = PasswordHasher.sha256("password"),
                             nickname = "alice",
@@ -94,6 +96,7 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     db.userDao().insert(
                         UserEntity(
+                            firebaseUid = null,
                             email = "bob@demo.local",
                             password = PasswordHasher.sha256("password"),
                             nickname = "bob",

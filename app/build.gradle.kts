@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("androidx.navigation.safeargs.kotlin")
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 
 }
 
@@ -63,4 +64,7 @@ dependencies {
     implementation(libs.okhttp.logging)
 
     implementation(libs.coil)
+
+    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+    implementation("com.google.firebase:firebase-auth")
 }

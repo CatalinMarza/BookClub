@@ -8,40 +8,58 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:padding="@dimen/default_space"
         app:layout_constraintWidth_percent="0.8"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:padding="@dimen/default_space">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <EditText
             android:id="@+id/edt_email"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/email" />
+            android:layout_height="48dp"
+            android:minHeight="48dp"
+            android:hint="@string/email"
+            android:inputType="textEmailAddress"
+            android:autofillHints="emailAddress"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray" />
 
         <EditText
             android:id="@+id/edt_nickname"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
             android:hint="@string/nickname"
+            android:inputType="textPersonName"
+            android:autofillHints="username"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray"
             android:layout_marginTop="@dimen/default_space" />
 
         <EditText
             android:id="@+id/edt_password"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
             android:hint="@string/password"
             android:inputType="textPassword"
+            android:autofillHints="password"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray"
             android:layout_marginTop="@dimen/default_space" />
 
         <EditText
             android:id="@+id/edt_confirm"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
             android:hint="@string/confirm_password"
             android:inputType="textPassword"
+            android:autofillHints="password"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray"
             android:layout_marginTop="@dimen/default_space" />
 
         <Button
@@ -51,12 +69,23 @@
             android:text="@string/register"
             android:layout_marginTop="@dimen/default_space" />
 
+        <TextView
+            android:id="@+id/tv_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/already_have_account_login"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:paddingTop="@dimen/default_space"
+            android:layout_gravity="center_horizontal" />
+
         <ProgressBar
             android:id="@+id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:layout_marginTop="@dimen/default_space" />
 
         <TextView
             android:id="@+id/tv_error"
@@ -64,6 +93,7 @@
             android:layout_height="wrap_content"
             android:textColor="@android:color/holo_red_dark"
             android:paddingTop="@dimen/default_space" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
