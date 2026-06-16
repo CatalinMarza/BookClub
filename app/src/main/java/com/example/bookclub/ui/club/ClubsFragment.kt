@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bookclub.R
 import kotlinx.coroutines.launch
-import java.time.Instant
 
 class ClubsFragment : Fragment(R.layout.fragment_clubs) {
 
@@ -23,31 +22,36 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
         super.onViewCreated(view, savedInstanceState)
 
         val recycler: RecyclerView = view.findViewById(R.id.recyclerClubs)
-        val placeholder: TextView  = view.findViewById(R.id.txtClubsPlaceholder)
-        val btnCreate: Button?     = view.findViewById(R.id.btnCreateClub)
+        val placeholder: TextView = view.findViewById(R.id.txtClubsPlaceholder)
+        val btnCreate: Button? = view.findViewById(R.id.btnCreateClub)
 
         val adapter = ClubsAdapter(
             onPrimaryClick = { ui ->
                 if (ui.isMember) {
-                    // Open -> mergi la ecranul de comentarii
                     val action = ClubsFragmentDirections.actionClubsFragmentToClubDetailFragment(
                         clubId = ui.club.id,
                         title = ui.club.title,
                         coverUrl = ui.club.coverUrl ?: ""
                     )
+
                     findNavController().navigate(action)
                 } else {
-                    // Join -> înscrie userul și (opțional) navighează
                     viewLifecycleOwner.lifecycleScope.launch {
                         try {
                             viewModel.joinClub(ui.club.id)
-                            Toast.makeText(requireContext(), getString(R.string.joined_club), Toast.LENGTH_SHORT).show()
+
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.joined_club),
+                                Toast.LENGTH_SHORT
+                            ).show()
 
                             val action = ClubsFragmentDirections.actionClubsFragmentToClubDetailFragment(
                                 clubId = ui.club.id,
                                 title = ui.club.title,
                                 coverUrl = ui.club.coverUrl ?: ""
                             )
+
                             findNavController().navigate(action)
                         } catch (t: Throwable) {
                             Toast.makeText(
@@ -59,11 +63,17 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
                     }
                 }
             },
+
             onLeaveClick = { ui ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
                         viewModel.leaveClub(ui.club.id)
-                        Toast.makeText(requireContext(), getString(R.string.left_club), Toast.LENGTH_SHORT).show()
+
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.left_club),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } catch (t: Throwable) {
                         Toast.makeText(
                             requireContext(),
@@ -73,14 +83,27 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
                     }
                 }
             },
+
+            onReviewClick = { ui ->
+                val bundle = Bundle().apply {
+                    putLong("clubId", ui.club.id)
+                    putString("title", ui.club.title)
+                }
+
+                findNavController().navigate(
+                    R.id.clubReviewFragment,
+                    bundle
+                )
+            },
+
             onCardClick = { ui ->
-                // dacă e membru, deschide comentariile și la tap pe card
                 if (ui.isMember) {
                     val action = ClubsFragmentDirections.actionClubsFragmentToClubDetailFragment(
                         clubId = ui.club.id,
                         title = ui.club.title,
                         coverUrl = ui.club.coverUrl ?: ""
                     )
+
                     findNavController().navigate(action)
                 }
             }
@@ -90,14 +113,11 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
         recycler.setHasFixedSize(true)
         recycler.adapter = adapter
 
-        // observăm lista UI (UiClub)
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiClubs.collect { list ->
                 adapter.submitList(list)
                 placeholder.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
             }
         }
-
-
     }
 }

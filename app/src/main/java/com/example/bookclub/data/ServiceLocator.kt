@@ -29,8 +29,23 @@ object ServiceLocator {
             db(context).inboxDao()
         )
 
-    fun inboxRepository(context: Context) =
-        InboxRepository(db(context).inboxDao())
+    fun inboxRepository(context: Context): InboxRepository {
+        val database = db(context)
+
+        return InboxRepository(
+            inboxDao = database.inboxDao(),
+            clubLookup = { clubId ->
+                val club = database.bookClubDao().getById(clubId)
+
+                club?.let {
+                    ClubLite(
+                        title = it.title,
+                        coverUrl = it.coverUrl
+                    )
+                }
+            }
+        )
+    }
 
     fun authRepository(context: Context) =
         AuthRepository(db(context).userDao())

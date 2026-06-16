@@ -11,9 +11,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bookclub.R
-import com.example.bookclub.ui.club.ClubsViewModel
-import com.example.bookclub.ui.club.UiClub
 import com.example.bookclub.ui.club.ClubsAdapter
+import com.example.bookclub.ui.club.ClubsViewModel
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
@@ -34,27 +33,69 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                         title = ui.club.title,
                         coverUrl = ui.club.coverUrl ?: ""
                     )
+
                     findNavController().navigate(action)
                 } else {
                     viewLifecycleOwner.lifecycleScope.launch {
-                        viewModel.joinClub(ui.club.id)
-                        Toast.makeText(requireContext(), getString(R.string.joined_club), Toast.LENGTH_SHORT).show()
-                        // poți naviga automat după join, dacă vrei:
-                        val action = HomeFragmentDirections.actionHomeFragmentToClubDetailFragment(
-                            clubId = ui.club.id,
-                            title = ui.club.title,
-                            coverUrl = ui.club.coverUrl ?: ""
-                        )
-                        findNavController().navigate(action)
+                        try {
+                            viewModel.joinClub(ui.club.id)
+
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.joined_club),
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            val action = HomeFragmentDirections.actionHomeFragmentToClubDetailFragment(
+                                clubId = ui.club.id,
+                                title = ui.club.title,
+                                coverUrl = ui.club.coverUrl ?: ""
+                            )
+
+                            findNavController().navigate(action)
+                        } catch (t: Throwable) {
+                            Toast.makeText(
+                                requireContext(),
+                                t.message ?: getString(R.string.join_failed),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
             },
+
             onLeaveClick = { ui ->
                 viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.leaveClub(ui.club.id)
-                    Toast.makeText(requireContext(), getString(R.string.left_club), Toast.LENGTH_SHORT).show()
+                    try {
+                        viewModel.leaveClub(ui.club.id)
+
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.left_club),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } catch (t: Throwable) {
+                        Toast.makeText(
+                            requireContext(),
+                            t.message ?: getString(R.string.leave_failed),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             },
+
+            onReviewClick = { ui ->
+                val bundle = Bundle().apply {
+                    putLong("clubId", ui.club.id)
+                    putString("title", ui.club.title)
+                }
+
+                findNavController().navigate(
+                    R.id.clubReviewFragment,
+                    bundle
+                )
+            },
+
             onCardClick = { ui ->
                 if (ui.isMember) {
                     val action = HomeFragmentDirections.actionHomeFragmentToClubDetailFragment(
@@ -62,6 +103,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                         title = ui.club.title,
                         coverUrl = ui.club.coverUrl ?: ""
                     )
+
                     findNavController().navigate(action)
                 }
             }

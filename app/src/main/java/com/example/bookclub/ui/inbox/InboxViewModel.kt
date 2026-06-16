@@ -11,14 +11,36 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class InboxViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo    = ServiceLocator.inboxRepository(app)
+
+    private val repo = ServiceLocator.inboxRepository(app)
     private val session = ServiceLocator.sessionManager(app)
-    private val userId: Long get() = session.currentUserId ?: 1L
+
+    private val userId: Long
+        get() = session.currentUserId ?: 1L
 
     val items: StateFlow<List<InboxUi>> =
         repo.listUiForUser(userId)
-            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = emptyList()
+            )
 
-    fun markRead(id: Long) = viewModelScope.launch { repo.markRead(id) }
-    fun markAllRead()      = viewModelScope.launch { repo.markAllRead(userId) }
+    fun markRead(id: Long) {
+        viewModelScope.launch {
+            repo.markRead(id)
+        }
+    }
+
+    fun markAllRead() {
+        viewModelScope.launch {
+            repo.markAllRead(userId)
+        }
+    }
+
+    fun deleteNotification(id: Long) {
+        viewModelScope.launch {
+            repo.deleteById(id)
+        }
+    }
 }

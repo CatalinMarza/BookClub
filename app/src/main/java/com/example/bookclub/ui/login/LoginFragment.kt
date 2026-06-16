@@ -23,6 +23,10 @@ import java.time.Instant
 
 class LoginFragment : Fragment() {
 
+    companion object {
+        private const val ADMIN_EMAIL = "admin@demo.local"
+    }
+
     private val session by lazy {
         ServiceLocator.sessionManager(requireContext())
     }
@@ -141,18 +145,31 @@ class LoginFragment : Fragment() {
         nickname: String
     ): UserEntity {
         val userDao = ServiceLocator.db(requireContext()).userDao()
+        val normalizedEmail = email.trim().lowercase()
 
-        val existingUser = userDao.getByEmail(email)
+        val existingUser = userDao.getByEmail(normalizedEmail)
+
         if (existingUser != null) {
+            if (normalizedEmail == ADMIN_EMAIL && existingUser.role != "ADMIN") {
+                userDao.updateRoleByEmail(normalizedEmail, "ADMIN")
+                return existingUser.copy(role = "ADMIN")
+            }
+
             return existingUser
+        }
+
+        val role = if (normalizedEmail == ADMIN_EMAIL) {
+            "ADMIN"
+        } else {
+            "USER"
         }
 
         val newUser = UserEntity(
             firebaseUid = firebaseUid,
-            email = email,
+            email = normalizedEmail,
             password = "firebase_auth",
             nickname = nickname,
-            role = "USER",
+            role = role,
             createdAt = Instant.now()
         )
 

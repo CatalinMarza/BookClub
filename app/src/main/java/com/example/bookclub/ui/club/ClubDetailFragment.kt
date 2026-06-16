@@ -13,7 +13,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,9 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Afișează DOAR comentariile părinte; replicile sunt încărcate lazy la expand.
- */
 class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
 
     private val args: ClubDetailFragmentArgs by navArgs()
@@ -52,6 +48,9 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
         val imgCover: ImageView = view.findViewById(R.id.imgCover)
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
 
+        val tvReviewSummary: TextView = view.findViewById(R.id.tvReviewSummary)
+        val tvReviewsList: TextView = view.findViewById(R.id.tvReviewsList)
+
         tvTitle.text = args.title
 
         imgCover.load(args.coverUrl) {
@@ -64,72 +63,12 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
         val repo = ServiceLocator.clubsRepository(requireContext())
         val reviewRepository = ServiceLocator.clubReviewRepository(requireContext())
 
-        val btnLeaveReview: Button = view.findViewById(R.id.btnLeaveReview)
-        val tvReviewSummary: TextView = view.findViewById(R.id.tvReviewSummary)
-        val tvReviewsList: TextView = view.findViewById(R.id.tvReviewsList)
-
-        btnLeaveReview.setOnClickListener {
-            val currentSession = ServiceLocator.sessionManager(requireContext()).get()
-
-            if (currentSession == null) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.err_not_logged_in),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-
-            viewLifecycleOwner.lifecycleScope.launch {
-                val alreadyReviewed = withContext(Dispatchers.IO) {
-                    reviewRepository.hasUserReviewedClub(
-                        clubId = args.clubId,
-                        userId = currentSession.userId
-                    )
-                }
-
-                if (alreadyReviewed) {
-                    Toast.makeText(
-                        requireContext(),
-                        "You already reviewed this club",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@launch
-                }
-
-                val isMember = withContext(Dispatchers.IO) {
-                    repo.isMember(currentSession.userId, args.clubId)
-                }
-
-                if (!isMember) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Only members can review this club",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    return@launch
-                }
-
-                val bundle = Bundle().apply {
-                    putLong("clubId", args.clubId)
-                    putString("title", args.title)
-                }
-
-                findNavController().navigate(
-                    R.id.clubReviewFragment,
-                    bundle
-                )
-            }
-        }
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 reviewRepository.reviewsForClub(args.clubId).collect { reviews ->
                     if (reviews.isEmpty()) {
                         tvReviewSummary.text = "No reviews yet"
                         tvReviewsList.text = ""
-                        btnLeaveReview.isEnabled = true
-                        btnLeaveReview.text = "Leave Review"
                     } else {
                         val average = reviews.map { it.rating }.average()
 
@@ -142,18 +81,6 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
                         tvReviewsList.text = reviews.joinToString(separator = "\n\n") { review ->
                             val stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating)
                             "$stars\n${review.comment}"
-                        }
-
-                        val currentUserId = session?.userId
-                        val currentUserAlreadyReviewed = currentUserId != null &&
-                                reviews.any { it.reviewerUserId == currentUserId }
-
-                        if (currentUserAlreadyReviewed) {
-                            btnLeaveReview.isEnabled = false
-                            btnLeaveReview.text = "Review already submitted"
-                        } else {
-                            btnLeaveReview.isEnabled = true
-                            btnLeaveReview.text = "Leave Review"
                         }
                     }
                 }

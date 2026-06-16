@@ -13,7 +13,11 @@ interface InboxDao {
     @Insert
     suspend fun insert(e: InboxEntity): Long
 
-    @Query("SELECT * FROM inbox WHERE userId = :userId ORDER BY createdAt DESC")
+    @Query("""
+        SELECT * FROM inbox
+        WHERE userId = :userId
+        ORDER BY isRead ASC, createdAt DESC
+    """)
     fun listForUser(userId: Long): Flow<List<InboxEntity>>
 
     @Query("UPDATE inbox SET isRead = 1 WHERE id = :id")
@@ -21,4 +25,7 @@ interface InboxDao {
 
     @Query("UPDATE inbox SET isRead = 1 WHERE userId = :userId AND isRead = 0")
     suspend fun markAllRead(userId: Long)
+
+    @Query("DELETE FROM inbox WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }

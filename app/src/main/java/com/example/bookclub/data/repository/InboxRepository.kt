@@ -11,19 +11,13 @@ import kotlinx.coroutines.flow.map
 import org.json.JSONObject
 import java.time.Instant
 
-/**
- * Informațiile de carte (title/cover) NU există în payloadJson.
- * Completăm dintr-o sursă externă (ex. ClubsRepository/ClubDao) prin [clubLookup].
- */
 class InboxRepository(
     private val inboxDao: InboxDao,
-    // injectezi aici un lookup real: { id -> clubsRepository.getLiteById(id) }
     private val clubLookup: suspend (Long) -> ClubLite? = { _ -> null }
 ) {
 
     fun listUiForUser(userId: Long): Flow<List<InboxUi>> =
         inboxDao.listForUser(userId).map { list ->
-            // transformare suspend pentru fiecare element, în paralel
             coroutineScope {
                 list.map { entity ->
                     async { entity.toUi(clubLookup) }
@@ -31,17 +25,23 @@ class InboxRepository(
             }
         }
 
-    suspend fun markRead(id: Long) = inboxDao.markRead(id)
-    suspend fun markAllRead(userId: Long) = inboxDao.markAllRead(userId)
+    suspend fun markRead(id: Long) {
+        inboxDao.markRead(id)
+    }
+
+    suspend fun markAllRead(userId: Long) {
+        inboxDao.markAllRead(userId)
+    }
+
+    suspend fun deleteById(id: Long) {
+        inboxDao.deleteById(id)
+    }
 }
 
-/** Model minim pentru lookup-ul unui club (titlu + copertă). */
 data class ClubLite(
     val title: String,
     val coverUrl: String?
 )
-
-/* -------------------- Helpers JSON -------------------- */
 
 private fun JSONObject.optStringOrNull(key: String): String? =
     optString(key).takeIf { it.isNotBlank() }
@@ -49,40 +49,79 @@ private fun JSONObject.optStringOrNull(key: String): String? =
 private fun JSONObject.optLongPositive(key: String): Long? =
     optLong(key, 0L).takeIf { it > 0 }
 
-/* -------------------- Mapping InboxEntity -> InboxUi -------------------- */
-
 private suspend fun InboxEntity.toUi(
     clubLookup: suspend (Long) -> ClubLite?
 ): InboxUi {
-    val p = try {
+    val payload = try {
         JSONObject(payloadJson ?: "{}")
     } catch (_: Throwable) {
         JSONObject()
     }
 
-    val clubId: Long = p.optLongPositive("clubId") ?: 0L
+    val clubId: Long = payload.optLongPositive("clubId") ?: 0L
 
-    // Din payload (dacă ar exista)
-    var titleFromPayload: String? = p.optStringOrNull("title")
-    var coverFromPayload: String? = p.optStringOrNull("coverUrl")
+    val payloadType = payload.optStringOrNull("type")
+    val entityType = type.takeIf { it.isNotBlank() }
 
-    // startAt (dacă apare cândva în payload)
-    val startAt: Instant? = p.optStringOrNull("startAt")
+    val notificationType = (payloadType ?: entityType)
+        ?.trim()
+        ?.lowercase()
+
+    var titleFromPayload: String? = payload.optStringOrNull("title")
+    var coverFromPayload: String? = payload.optStringOrNull("coverUrl")
+
+    val startAt: Instant? = payload.optStringOrNull("startAt")
         ?.let { runCatching { Instant.parse(it) }.getOrNull() }
 
-    // Dacă payload-ul NU conține titlul/cover, încercăm să le luăm din lookup
     if (titleFromPayload.isNullOrBlank() || coverFromPayload.isNullOrBlank()) {
-        val club = if (clubId > 0) runCatching { clubLookup(clubId) }.getOrNull() else null
-        if (titleFromPayload.isNullOrBlank()) titleFromPayload = club?.title
-        if (coverFromPayload.isNullOrBlank()) coverFromPayload = club?.coverUrl
+        val club = if (clubId > 0) {
+            runCatching { clubLookup(clubId) }.getOrNull()
+        } else {
+            null
+        }
+
+        if (titleFromPayload.isNullOrBlank()) {
+            titleFromPayload = club?.title
+        }
+
+        if (coverFromPayload.isNullOrBlank()) {
+            coverFromPayload = club?.coverUrl
+        }
     }
 
-    val finalTitle = titleFromPayload ?: if (clubId > 0) "Club #$clubId" else "Untitled"
+    val finalTitle = titleFromPayload ?: if (clubId > 0) {
+        "Club #$clubId"
+    } else {
+        "Untitled"
+    }
+
+    val message = when (notificationType) {
+        "comment_reply" -> "A răspuns la un comentariu"
+        "commentreply" -> "A răspuns la un comentariu"
+        "comment_reply_notification" -> "A răspuns la un comentariu"
+        "comment_reply_created" -> "A răspuns la un comentariu"
+
+        "new_comment" -> "Comentariu nou în club"
+        "comment" -> "Comentariu nou în club"
+        "comment_created" -> "Comentariu nou în club"
+
+        "club_starting" -> "Clubul urmează să înceapă"
+        "club_started" -> "Clubul a început"
+        "club_start" -> "Clubul a început"
+        "started" -> "Clubul a început"
+
+        "club_closed" -> "Clubul s-a încheiat"
+        "club_ended" -> "Clubul s-a încheiat"
+        "ended" -> "Clubul s-a încheiat"
+
+        else -> "Notificare pentru club"
+    }
 
     return InboxUi(
         id = id,
         clubId = clubId,
         title = finalTitle,
+        message = message,
         coverUrl = coverFromPayload,
         startAt = startAt,
         createdAt = createdAt,

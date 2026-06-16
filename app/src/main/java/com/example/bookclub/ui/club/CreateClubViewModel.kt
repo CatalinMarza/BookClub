@@ -30,9 +30,11 @@ class CreateClubViewModel(app: Application) : AndroidViewModel(app) {
         author: String,
         description: String?,
         coverUrl: String?,
-        startAt: Instant
+        startAt: Instant,
+        closeAt: Instant
     ) = viewModelScope.launch {
         _state.value = CreateState.Loading
+
         try {
             val id = repo.createClub(
                 adminId = adminId,
@@ -41,13 +43,17 @@ class CreateClubViewModel(app: Application) : AndroidViewModel(app) {
                 author = author,
                 coverUrl = coverUrl,
                 description = description,
-                startAt = startAt
+                startAt = startAt,
+                closeAt = closeAt
             )
+
             _state.value = CreateState.Success(id)
         } catch (t: Throwable) {
             _state.value = CreateState.Error(t)
         }
     }
 
-    fun reset() { _state.value = CreateState.Idle }
+    fun reset() {
+        _state.value = CreateState.Idle
+    }
 }

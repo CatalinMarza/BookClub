@@ -9,28 +9,64 @@ import com.example.bookclub.data.db.BookClubEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 
 class ClubsViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = ServiceLocator.clubsRepository(app)
-    private val session = ServiceLocator.sessionManager(app) // ia userId curent
-    private val userId: Long get() = session.currentUserId ?: 1L
 
-    // all clubs + clubs for current user  -> UiClub (cu flag de membru)
+    private val repo = ServiceLocator.clubsRepository(app)
+    private val reviewRepo = ServiceLocator.clubReviewRepository(app)
+    private val session = ServiceLocator.sessionManager(app)
+
+    private val userId: Long
+        get() = session.currentUserId ?: 1L
+
     val uiClubs: StateFlow<List<UiClub>> =
         combine(
-            repo.listAll(),            // Flow<List<BookClubEntity>>
-            repo.listForUser(userId)   // Flow<List<BookClubEntity>>
+            repo.listAll(),
+            repo.listForUser(userId)
         ) { all, mine ->
-            val mineIds = mine.map { it.id }.toSet()
-            all.map { club -> UiClub(club = club, isMember = club.id in mineIds) }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+            all to mine
+        }.flatMapLatest { (all, mine) ->
+            if (all.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                val mineIds = mine.map { it.id }.toSet()
 
-    // dacă încă folosești direct lista simplă pe undeva
+                val clubFlows = all.map { club ->
+                    combine(
+                        reviewRepo.averageRatingForClub(club.id),
+                        reviewRepo.reviewCountForClub(club.id)
+                    ) { average, count ->
+                        UiClub(
+                            club = club,
+                            isMember = club.id in mineIds,
+                            averageRating = average,
+                            reviewCount = count,
+                            currentUserReviewed = false
+                        )
+                    }
+                }
+
+                combine(clubFlows) { array ->
+                    array.toList()
+                }
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()
+        )
+
     val clubs: StateFlow<List<BookClubEntity>> =
-        repo.listAll().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        repo.listAll().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = emptyList()
+        )
 
     fun createClub(
         adminId: Long,
@@ -39,16 +75,32 @@ class ClubsViewModel(app: Application) : AndroidViewModel(app) {
         author: String,
         coverUrl: String?,
         description: String?,
-        startAt: Instant
-    ) = viewModelScope.launch {
-        repo.createClub(adminId, workId, title, author, coverUrl, description, startAt)
+        startAt: Instant,
+        closeAt: Instant
+    ) {
+        viewModelScope.launch {
+            repo.createClub(
+                adminId = adminId,
+                workId = workId,
+                title = title,
+                author = author,
+                coverUrl = coverUrl,
+                description = description,
+                startAt = startAt,
+                closeAt = closeAt
+            )
+        }
     }
 
-    fun joinClub(clubId: Long) = viewModelScope.launch {
-        repo.joinClub(userId, clubId)
+    fun joinClub(clubId: Long) {
+        viewModelScope.launch {
+            repo.joinClub(userId, clubId)
+        }
     }
 
-    fun leaveClub(clubId: Long) = viewModelScope.launch {
-        repo.leaveClub(userId, clubId)
+    fun leaveClub(clubId: Long) {
+        viewModelScope.launch {
+            repo.leaveClub(userId, clubId)
+        }
     }
 }

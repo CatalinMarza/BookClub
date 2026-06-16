@@ -17,4 +17,7 @@ interface UserDao {
 
     @Query("SELECT COUNT(*) FROM user")
     suspend fun count(): Long
+
+    @Query("UPDATE user SET role = :role WHERE email = :email")
+    suspend fun updateRoleByEmail(email: String, role: String)
 }
