@@ -9,12 +9,14 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.Space
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.bookclub.R
+import com.example.bookclub.data.db.BookClubEntity
 import com.example.bookclub.data.model.ClubStatus
 import java.time.Duration
 import java.time.Instant
@@ -26,15 +28,23 @@ class ClubsAdapter(
     val onPrimaryClick: (UiClub) -> Unit,
     val onLeaveClick: (UiClub) -> Unit,
     val onReviewClick: (UiClub) -> Unit,
+    val onBookDetailsClick: (UiClub) -> Unit,
     val onCardClick: (UiClub) -> Unit
 ) : ListAdapter<UiClub, ClubsAdapter.VH>(Diff) {
 
     object Diff : DiffUtil.ItemCallback<UiClub>() {
-        override fun areItemsTheSame(a: UiClub, b: UiClub) = a.club.id == b.club.id
-        override fun areContentsTheSame(a: UiClub, b: UiClub) = a == b
+        override fun areItemsTheSame(a: UiClub, b: UiClub): Boolean {
+            return a.club.id == b.club.id
+        }
+
+        override fun areContentsTheSame(a: UiClub, b: UiClub): Boolean {
+            return a == b
+        }
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
+        private val cardClub: CardView = view.findViewById(R.id.cardClub)
+
         private val img: ImageView = view.findViewById(R.id.imgCover)
         private val title: TextView = view.findViewById(R.id.txtTitle)
         private val author: TextView = view.findViewById(R.id.txtAuthor)
@@ -43,6 +53,7 @@ class ClubsAdapter(
         private val rating: TextView = view.findViewById(R.id.txtRating)
         private val status: TextView = view.findViewById(R.id.txtStatus)
 
+        private val btnBookDetails: Button = view.findViewById(R.id.btnBookDetails)
         private val btnJoinOpen: Button = view.findViewById(R.id.btnJoinOpen)
         private val btnReview: Button = view.findViewById(R.id.btnReview)
         private val btnLeave: Button = view.findViewById(R.id.btnLeave)
@@ -55,31 +66,7 @@ class ClubsAdapter(
             author.text = item.author
             start.text = "Starts: ${item.startAt.toPrettyDate()}"
 
-            val now = Instant.now()
-
-            val effective = when {
-                now.isBefore(item.startAt) -> ClubStatus.SCHEDULED
-                now.isAfter(item.closeAt) -> ClubStatus.CLOSED
-                else -> ClubStatus.LIVE
-            }
-
-            status.text = when (effective) {
-                ClubStatus.LIVE -> "LIVE"
-                ClubStatus.SCHEDULED -> "SCHEDULED"
-                ClubStatus.CLOSED -> "CLOSED"
-            }
-
-            status.setBackgroundResource(R.drawable.badge_pill)
-            status.background.setTint(
-                ContextCompat.getColor(
-                    status.context,
-                    when (effective) {
-                        ClubStatus.LIVE -> R.color.badgeLive
-                        ClubStatus.SCHEDULED -> R.color.badgeScheduled
-                        ClubStatus.CLOSED -> R.color.badgeClosed
-                    }
-                )
-            )
+            val effective = applyStatusUi(item)
 
             img.load(item.coverUrl) {
                 placeholder(R.drawable.ic_book_placeholder)
@@ -99,17 +86,20 @@ class ClubsAdapter(
             val clubActiveOrScheduled =
                 effective == ClubStatus.SCHEDULED || effective == ClubStatus.LIVE
 
-            btnJoinOpen.text = if (ui.isMember) {
-                status.context.getString(R.string.club_open)
-            } else {
-                status.context.getString(R.string.club_join)
+            btnBookDetails.text = "Book Details"
+            btnBookDetails.setOnClickListener {
+                onBookDetailsClick(ui)
             }
 
-            btnJoinOpen.isEnabled = when {
-                ui.isMember -> true
-                clubActiveOrScheduled -> true
-                else -> false
+            btnJoinOpen.text = itemView.context.getString(R.string.club_join)
+
+            btnJoinOpen.visibility = if (ui.isMember) {
+                View.GONE
+            } else {
+                View.VISIBLE
             }
+
+            btnJoinOpen.isEnabled = clubActiveOrScheduled
 
             btnJoinOpen.setOnClickListener {
                 onPrimaryClick(ui)
@@ -148,7 +138,9 @@ class ClubsAdapter(
             }
         }
 
-        fun updateCountdown(item: com.example.bookclub.data.db.BookClubEntity) {
+        fun updateCountdown(item: BookClubEntity) {
+            applyStatusUi(item)
+
             val now = Instant.now()
 
             when {
@@ -168,6 +160,52 @@ class ClubsAdapter(
                     countdown.visibility = View.GONE
                 }
             }
+        }
+
+        private fun effectiveStatus(item: BookClubEntity): ClubStatus {
+            val now = Instant.now()
+
+            return when {
+                now.isBefore(item.startAt) -> ClubStatus.SCHEDULED
+                now.isAfter(item.closeAt) -> ClubStatus.CLOSED
+                else -> ClubStatus.LIVE
+            }
+        }
+
+        private fun applyStatusUi(item: BookClubEntity): ClubStatus {
+            val effective = effectiveStatus(item)
+
+            status.text = when (effective) {
+                ClubStatus.LIVE -> "LIVE"
+                ClubStatus.SCHEDULED -> "SCHEDULED"
+                ClubStatus.CLOSED -> "CLOSED"
+            }
+
+            status.setBackgroundResource(R.drawable.badge_pill)
+
+            status.background?.setTint(
+                ContextCompat.getColor(
+                    status.context,
+                    when (effective) {
+                        ClubStatus.LIVE -> R.color.badgeLive
+                        ClubStatus.SCHEDULED -> R.color.badgeScheduled
+                        ClubStatus.CLOSED -> R.color.badgeClosed
+                    }
+                )
+            )
+
+            cardClub.setCardBackgroundColor(
+                ContextCompat.getColor(
+                    itemView.context,
+                    when (effective) {
+                        ClubStatus.LIVE -> R.color.card_live
+                        ClubStatus.SCHEDULED -> R.color.card_scheduled
+                        ClubStatus.CLOSED -> R.color.card_closed
+                    }
+                )
+            )
+
+            return effective
         }
     }
 
@@ -214,7 +252,7 @@ class ClubsAdapter(
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
-        handler.removeCallbacksAndMessages(null)
+        handler.removeCallbacks(ticker)
     }
 }
 
@@ -222,7 +260,9 @@ private val prettyFormatter: DateTimeFormatter = DateTimeFormatter
     .ofPattern("dd MMM yyyy, HH:mm")
     .withZone(ZoneId.systemDefault())
 
-private fun Instant.toPrettyDate(): String = prettyFormatter.format(this)
+private fun Instant.toPrettyDate(): String {
+    return prettyFormatter.format(this)
+}
 
 private fun Duration.asHms(): String {
     val total = max(0, seconds)

@@ -77,6 +77,14 @@
             android:visibility="gone"
             tools:listitem="@layout/item_followed"/>
 
+        <!-- Buton lista MyClub-->
+        <Button
+            android:id="@+id/btnMyClubs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="My Clubs"
+            android:layout_marginTop="24dp" />
+
         <!-- Buton logout -->
         <Button
             android:id="@+id/btn_logout"

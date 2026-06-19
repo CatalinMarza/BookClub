@@ -25,6 +25,8 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
         val placeholder: TextView = view.findViewById(R.id.txtClubsPlaceholder)
         val btnCreate: Button? = view.findViewById(R.id.btnCreateClub)
 
+        btnCreate?.visibility = View.GONE
+
         val adapter = ClubsAdapter(
             onPrimaryClick = { ui ->
                 if (ui.isMember) {
@@ -96,6 +98,20 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
                 )
             },
 
+            onBookDetailsClick = { ui ->
+                val bundle = Bundle().apply {
+                    putString("workId", ui.club.workId)
+                    putString("title", ui.club.title)
+                    putString("author", ui.club.author)
+                    putString("coverUrl", ui.club.coverUrl ?: "")
+                }
+
+                findNavController().navigate(
+                    R.id.bookDetailFragment,
+                    bundle
+                )
+            },
+
             onCardClick = { ui ->
                 if (ui.isMember) {
                     val action = ClubsFragmentDirections.actionClubsFragmentToClubDetailFragment(
@@ -115,8 +131,10 @@ class ClubsFragment : Fragment(R.layout.fragment_clubs) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiClubs.collect { list ->
-                adapter.submitList(list)
-                placeholder.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                val myClubs = list.filter { it.isMember }
+
+                adapter.submitList(myClubs)
+                placeholder.visibility = if (myClubs.isEmpty()) View.VISIBLE else View.GONE
             }
         }
     }

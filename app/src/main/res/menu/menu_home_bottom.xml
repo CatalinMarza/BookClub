@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!-- Meniul folosit de BottomNavigationView.
+     ID-urile itemilor corespund cu fragmentele din navigation_home.xml. -->
+
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/homeFragment"
         android:title="@string/home"

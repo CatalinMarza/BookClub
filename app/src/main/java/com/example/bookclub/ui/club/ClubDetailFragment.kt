@@ -120,9 +120,7 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
                 repo.getClub(args.clubId)
             }
 
-            val liveOk = club != null &&
-                    club.status == ClubStatus.LIVE &&
-                    repo.isLive(club)
+            val liveOk = club != null && repo.isLive(club)
 
             val memberOk = if (userId != null && club != null) {
                 withContext(Dispatchers.IO) {

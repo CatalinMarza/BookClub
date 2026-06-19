@@ -159,16 +159,18 @@ class RegisterFragment : Fragment() {
     ): UserEntity {
         val userDao = ServiceLocator.db(requireContext()).userDao()
 
-        val existingUser = userDao.getByEmail(email)
+        val normalizedEmail = email.trim().lowercase()
+
+        val existingUser = userDao.getByEmail(normalizedEmail)
         if (existingUser != null) {
             return existingUser
         }
 
         val newUser = UserEntity(
             firebaseUid = firebaseUid,
-            email = email,
+            email = normalizedEmail,
             password = "firebase_auth",
-            nickname = nickname,
+            nickname = nickname.trim(),
             role = "USER",
             createdAt = Instant.now()
         )

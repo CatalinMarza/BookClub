@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        // Obtine NavController-ul din NavHostFragment.
+        // NavController gestioneaza navigarea intre fragmente
         val host = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = host.navController
         val bottom = findViewById<BottomNavigationView>(R.id.bottom_nav)
@@ -33,21 +35,19 @@ class MainActivity : AppCompatActivity() {
         // Leagă meniul ca să păstreze state/label-uri
         bottom.setupWithNavController(navController)
 
-        // 1) Când reSELECTEZI același tab (ex: ești pe ClubDetail sub Home și apeși iar Home),
-        //    fă popBackStack până la rădăcina acelui tab (fragmentul cu același ID ca item-ul de menu)
+        // Dacă userul apasă din nou tabul curent,
+        // aplicația revine la fragmentul principal al acelui tab.
         bottom.setOnItemReselectedListener { item ->
-            // pop până la destinatia cu id-ul item-ului (ex.: R.id.homeFragment)
             navController.popBackStack(item.itemId, false)
         }
 
-        // 2) Când schimbi tab-ul, navighează cu popUpTo(start) + restore state
+        // Navigare intre taburile principale cu salvarea/restaurarea stării.
         bottom.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.homeFragment,
                 R.id.booksFragment,
                 R.id.inboxFragment,
-                R.id.profileFragment,
-                R.id.clubsFragment -> {
+                R.id.profileFragment -> {
                     navController.navigate(
                         item.itemId,
                         null,
@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Arată/ascunde bottom bar unde vrei
+        // Ascunde bottom navigation pe ecranele de autentificare.
         val hideOn = setOf(R.id.loginFragment, R.id.registerFragment)
         navController.addOnDestinationChangedListener { _, d, _ ->
             bottom.isVisible = d.id !in hideOn

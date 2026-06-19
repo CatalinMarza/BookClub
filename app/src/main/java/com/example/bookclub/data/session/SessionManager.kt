@@ -2,7 +2,7 @@ package com.example.bookclub.data.session
 
 import android.content.Context
 
-// gestioneaza sessiune in SharedPreferences
+// gestioneaza sessiune locala folosind datele salvate a in SharedPreferences
 data class Session(
     val userId: Long,
     val email: String,
@@ -40,7 +40,7 @@ class SessionManager(context: Context) {
         prefs.edit().clear().apply()
     }
 
-    // 👇 adăugat pentru acces rapid la userId curent
+    // Acces rapid la user-ul curent
     val currentUserId: Long?
         get() = if (isLoggedIn()) prefs.getLong(KEY_USER_ID, -1L) else null
 

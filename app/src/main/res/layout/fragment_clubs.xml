@@ -6,15 +6,7 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- Buton: Create Club (dev/test) -->
-    <Button
-        android:id="@+id/btnCreateClub"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Create Club"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+
 
     <!-- Placeholder: vizibil doar când lista e goală -->
     <TextView

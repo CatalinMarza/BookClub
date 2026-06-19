@@ -16,7 +16,7 @@ interface MembershipDao {
     @Query("DELETE FROM membership WHERE userId = :userId AND clubId = :clubId")
     suspend fun delete(userId: Long, clubId: Long)
 
-    // păstrează asta dacă o folosești în altă parte
+    // Returnează cluburile în care userul este membru.
     @Query("""
         SELECT bc.* FROM bookclub bc
         INNER JOIN membership m ON m.clubId = bc.id
@@ -25,7 +25,7 @@ interface MembershipDao {
     """)
     fun getClubsForUser(userId: Long): Flow<List<BookClubEntity>>
 
-    // ✅ NOU: flow cu toate clubId-urile unde userul e membru (necesar pentru UI Join/Open/Leave)
+    // Returnează id-urile cluburilor în care userul este membru.
     @Query("SELECT clubId FROM membership WHERE userId = :userId")
     fun getClubIdsForUser(userId: Long): Flow<List<Long>>
 

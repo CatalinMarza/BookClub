@@ -96,6 +96,20 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 )
             },
 
+            onBookDetailsClick = { ui ->
+                val bundle = Bundle().apply {
+                    putString("workId", ui.club.workId)
+                    putString("title", ui.club.title)
+                    putString("author", ui.club.author)
+                    putString("coverUrl", ui.club.coverUrl ?: "")
+                }
+
+                findNavController().navigate(
+                    R.id.bookDetailFragment,
+                    bundle
+                )
+            },
+
             onCardClick = { ui ->
                 if (ui.isMember) {
                     val action = HomeFragmentDirections.actionHomeFragmentToClubDetailFragment(

@@ -5,7 +5,7 @@ import com.example.bookclub.data.model.ClubStatus
 import java.time.Instant
 
 // TypeConverters Room: transformari pentru Instant si ClubStatus
-// convertori folositi de Room pentru tipuri non-primitive
+// Convertori Room pentru tipuri care nu pot fi salvate direct în SQLite
 class Converters {
 
     // Instant ↔ Long

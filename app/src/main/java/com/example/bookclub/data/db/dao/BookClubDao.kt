@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
-import com.example.bookclub.data.db.BookClubEntity   // <— IMPORTUL LIPSEA
+import com.example.bookclub.data.db.BookClubEntity
 import com.example.bookclub.data.model.ClubStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -21,8 +21,17 @@ interface BookClubDao {
     suspend fun upsert(club: BookClubEntity)
 
     /** Toate cluburile ordonate după start */
-    @Query("SELECT * FROM bookclub ORDER BY startAt ASC")
-    fun getAllOrderByStart(): Flow<List<BookClubEntity>>
+    @Query("""
+    SELECT * FROM bookclub
+    ORDER BY
+      CASE
+        WHEN startAt <= :now AND closeAt >= :now THEN 0
+        WHEN startAt > :now THEN 1
+        ELSE 2
+      END,
+      startAt ASC
+""")
+    fun getAllOrderByStart(now: java.time.Instant): Flow<List<BookClubEntity>>
 
     /** Căutare după titlu/autor – wildcard în SQL */
     @Query("""
@@ -33,32 +42,34 @@ interface BookClubDao {
     """)
     fun search(q: String): Flow<List<BookClubEntity>>
 
-    /** Cluburi pentru o carte – LIVE primele, apoi SCHEDULED, apoi CLOSED */
+    /** Cluburi pentru o carte – LIVE primele, apoi SCHEDULED, apoi CLOSED - momentan neimplementata */
     @Query("""
-        SELECT * FROM bookclub
-        WHERE workId = :workId
-        ORDER BY 
-          CASE status 
-            WHEN 'LIVE' THEN 0 
-            WHEN 'SCHEDULED' THEN 1 
-            ELSE 2 
-          END,
-          startAt ASC
-    """)
-    fun clubsForWork(workId: String): Flow<List<BookClubEntity>>
+    SELECT * FROM bookclub
+    WHERE workId = :workId
+    ORDER BY
+      CASE
+        WHEN startAt <= :now AND closeAt >= :now THEN 0
+        WHEN startAt > :now THEN 1
+        ELSE 2
+      END,
+      startAt ASC
+""")
+    fun clubsForWork(
+        workId: String,
+        now: java.time.Instant
+    ): Flow<List<BookClubEntity>>
 
     /** Există deja un club activ (SCHEDULED/LIVE) pentru cartea dată? */
     @Query("""
-        SELECT EXISTS(
-            SELECT 1 FROM bookclub 
-            WHERE workId = :workId 
-              AND status IN (:active1, :active2)
-        )
-    """)
+    SELECT EXISTS(
+        SELECT 1 FROM bookclub
+        WHERE workId = :workId
+          AND closeAt > :now
+    )
+""")
     suspend fun existsActiveForWork(
         workId: String,
-        active1: ClubStatus = ClubStatus.SCHEDULED,
-        active2: ClubStatus = ClubStatus.LIVE
+        now: java.time.Instant
     ): Boolean
 
     /** Club după id */
@@ -71,19 +82,19 @@ interface BookClubDao {
 
     /** Upcoming/LIVE pentru cărțile urmărite (JOIN cu follow_book) */
     @Query("""
-        SELECT bc.* FROM bookclub bc
-        JOIN follow_book fb ON fb.workId = bc.workId
-        WHERE fb.userId = :userId 
-          AND bc.status IN (:s1, :s2)
-        ORDER BY 
-          CASE bc.status WHEN 'LIVE' THEN 0 ELSE 1 END,
-          bc.startAt ASC
-    """)
-
-
+    SELECT bc.* FROM bookclub bc
+    JOIN follow_book fb ON fb.workId = bc.workId
+    WHERE fb.userId = :userId
+      AND bc.closeAt > :now
+    ORDER BY
+      CASE
+        WHEN bc.startAt <= :now AND bc.closeAt >= :now THEN 0
+        ELSE 1
+      END,
+      bc.startAt ASC
+""")
     fun listForFollowedBooks(
         userId: Long,
-        s1: ClubStatus = ClubStatus.SCHEDULED,
-        s2: ClubStatus = ClubStatus.LIVE
+        now: java.time.Instant
     ): Flow<List<BookClubEntity>>
 }

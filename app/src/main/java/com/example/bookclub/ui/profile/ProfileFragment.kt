@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bookclub.R
 import com.example.bookclub.data.ServiceLocator
 import kotlinx.coroutines.launch
+import androidx.navigation.fragment.findNavController
 
 class ProfileFragment : Fragment() {
 
@@ -60,6 +61,11 @@ class ProfileFragment : Fragment() {
         view.findViewById<Button>(R.id.btn_logout)?.setOnClickListener {
             sessionManager.clear()
             findNavController().navigate(R.id.loginFragment)
+        }
+        val btnMyClubs: Button = view.findViewById(R.id.btnMyClubs)
+
+        btnMyClubs.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_clubsFragment)
         }
     }
 }

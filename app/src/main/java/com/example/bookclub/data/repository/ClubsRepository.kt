@@ -24,7 +24,7 @@ class ClubsRepository(
     private val inboxDao: InboxDao,
     private val commentDao: CommentDao
 ) {
-    fun listAll(): Flow<List<BookClubEntity>> = clubDao.getAllOrderByStart()
+    fun listAll(): Flow<List<BookClubEntity>> = clubDao.getAllOrderByStart(Instant.now())
 
     fun search(query: String): Flow<List<BookClubEntity>> = clubDao.search(query)
 
@@ -32,7 +32,7 @@ class ClubsRepository(
         membershipDao.getClubsForUser(userId)
 
     fun listForFollowedBooks(userId: Long): Flow<List<BookClubEntity>> =
-        clubDao.listForFollowedBooks(userId)
+        clubDao.listForFollowedBooks(userId, Instant.now())
 
     fun clubFlow(clubId: Long) =
         clubDao.getByIdFlow(clubId)
@@ -53,7 +53,7 @@ class ClubsRepository(
         startAt: Instant,
         closeAt: Instant
     ): Long {
-        if (clubDao.existsActiveForWork(workId)) {
+        if (clubDao.existsActiveForWork(workId, Instant.now())) {
             throw IllegalStateException("Active club already exists for this work")
         }
 

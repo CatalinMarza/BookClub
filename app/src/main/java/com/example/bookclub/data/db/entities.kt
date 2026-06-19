@@ -4,7 +4,7 @@ import androidx.room.*
 import com.example.bookclub.data.model.ClubStatus
 import java.time.Instant
 
-// Entitati Room (tabele) si indecsi
+// Entitati Room: fiecare clasa defineste un tabel local al aplicatiei
 @Entity(
     tableName = "user",
     indices = [

@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!-- Navigation graph care definește flow-ul de autentificare.
+Aplicația pornește în LoginFragment, permite navigarea către RegisterFragment,
+iar după login/register se ajunge în zona principală a aplicației. -->
+
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_authentication"
-    app:startDestination="@id/loginFragment">
+    app:startDestination="@id/loginFragment"> <!-- Stabileste fragmentul de pornire -->
 
+    <!-- Include graful principal pentru ecranele de după autentificare -->
     <include app:graph="@navigation/navigation_home"/>
 
     <fragment
@@ -15,6 +21,7 @@
         <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
+        <!-- Dupa login reusit, se intră în aplicatie și se elimină flow-ul de autentificare din back stack -->
         <action
             android:id="@+id/action_loginFragment_to_navigation_home"
             app:popUpTo="@id/navigation_authentication"

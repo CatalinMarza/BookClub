@@ -77,6 +77,7 @@ class LoginFragment : Fragment() {
             progress.visibility = View.VISIBLE
             btnLogin.isEnabled = false
 
+            // Firebase authentication
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener { result ->
                     val firebaseUser = result.user

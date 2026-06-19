@@ -45,7 +45,12 @@
         android:id="@+id/profileFragment"
         android:name="com.example.bookclub.ui.profile.ProfileFragment"
         android:label="ProfileFragment"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+
+        <action
+            android:id="@+id/action_profileFragment_to_clubsFragment"
+            app:destination="@id/clubsFragment" />
+    </fragment>
 
     <!-- Clubs -->
     <fragment
@@ -80,9 +85,7 @@
             app:argType="string"
             android:defaultValue="" />
 
-        <action
-            android:id="@+id/action_clubDetailFragment_to_clubReviewFragment"
-            app:destination="@id/clubReviewFragment" />
+
     </fragment>
 
     <!-- Club Review -->
