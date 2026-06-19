@@ -31,22 +31,6 @@
             android:ellipsize="end" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvReviewSummary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No reviews yet"
-        android:textStyle="bold"
-        android:textSize="15sp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp" />
-
-    <TextView
-        android:id="@+id/tvReviewsList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:paddingBottom="12dp" />
 
     <TextView
         android:id="@+id/tvCommentsDisabled"

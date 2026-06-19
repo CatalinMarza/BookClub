@@ -48,9 +48,6 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
         val imgCover: ImageView = view.findViewById(R.id.imgCover)
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
 
-        val tvReviewSummary: TextView = view.findViewById(R.id.tvReviewSummary)
-        val tvReviewsList: TextView = view.findViewById(R.id.tvReviewsList)
-
         tvTitle.text = args.title
 
         imgCover.load(args.coverUrl) {
@@ -61,31 +58,6 @@ class ClubDetailFragment : Fragment(R.layout.fragment_club_detail) {
 
         val session = ServiceLocator.sessionManager(requireContext()).get()
         val repo = ServiceLocator.clubsRepository(requireContext())
-        val reviewRepository = ServiceLocator.clubReviewRepository(requireContext())
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                reviewRepository.reviewsForClub(args.clubId).collect { reviews ->
-                    if (reviews.isEmpty()) {
-                        tvReviewSummary.text = "No reviews yet"
-                        tvReviewsList.text = ""
-                    } else {
-                        val average = reviews.map { it.rating }.average()
-
-                        tvReviewSummary.text =
-                            "Club rating: %.1f / 5 from %d reviews".format(
-                                average,
-                                reviews.size
-                            )
-
-                        tvReviewsList.text = reviews.joinToString(separator = "\n\n") { review ->
-                            val stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating)
-                            "$stars\n${review.comment}"
-                        }
-                    }
-                }
-            }
-        }
 
         val replyBar: View = view.findViewById(R.id.replyBar)
         val tvReplyingTo: TextView = view.findViewById(R.id.tvReplyingTo)
