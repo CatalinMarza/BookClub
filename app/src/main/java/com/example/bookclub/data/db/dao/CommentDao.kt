@@ -13,7 +13,7 @@ interface CommentDao {
     @Insert
     suspend fun insert(comment: CommentEntity): Long
 
-    // Top-level + autor (există deja)
+    // Comentarii principale împreună cu autorul.
     @Query("""
         SELECT 
             c.id            AS id,
@@ -30,7 +30,7 @@ interface CommentDao {
     """)
     fun getTopLevelWithAuthor(clubId: Long): Flow<List<CommentWithAuthor>>
 
-    // ✅ Toate comentariile (inclusiv reply), în ordinea: parent desc, apoi replies asc
+    // Comentarii cu autorul și reply-urile.: parent desc, apoi replies asc
     @Query("""
         SELECT 
             c.id            AS id,

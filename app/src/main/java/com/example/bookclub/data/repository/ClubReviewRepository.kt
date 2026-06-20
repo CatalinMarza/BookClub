@@ -4,6 +4,8 @@ import com.example.bookclub.data.db.ClubReviewEntity
 import com.example.bookclub.data.db.dao.ClubReviewDao
 import java.time.Instant
 
+// Repository-ul valideaza datele review-ului și salveaza in room
+// Verificarile de acces pentru formular sunt facute în ClubReviewFragment.
 class ClubReviewRepository(
     private val dao: ClubReviewDao
 ) {

@@ -16,7 +16,6 @@ class BooksViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = ServiceLocator.booksRepository(app)
 
-    // <<< DOAR BookSearchItem aici
     private val _searchState = MutableStateFlow<UiState<List<BookSearchItem>>>(UiState.Idle)
     val searchState: StateFlow<UiState<List<BookSearchItem>>> = _searchState
 

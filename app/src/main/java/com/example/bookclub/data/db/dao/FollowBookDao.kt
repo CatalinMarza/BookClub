@@ -4,7 +4,7 @@ import androidx.room.*
 import com.example.bookclub.data.db.FollowBookEntity
 import kotlinx.coroutines.flow.Flow
 
-// DAO Room pentru FollowBook: metode CRUD si query-uri specifice
+// DAO pentru tabela follow_book. Gestionează cărțile urmărite de useri.
 @Dao
 interface FollowBookDao {
     @Upsert

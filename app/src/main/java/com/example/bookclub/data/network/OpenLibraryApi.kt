@@ -6,6 +6,7 @@ import retrofit2.http.Query
 
 // Retrofit API spre openlibrary.org
 interface OpenLibraryApi {
+    // Endpoint căutare lucrari
     @GET("search.json")
     suspend fun search(
         @Query("q") query: String,

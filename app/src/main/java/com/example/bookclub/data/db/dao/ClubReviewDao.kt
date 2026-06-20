@@ -9,10 +9,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ClubReviewDao {
-
+    //Inserează un review în tabela club_review
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(review: ClubReviewEntity)
 
+    //Returnează toate reviewurile pentru un club specificat
     @Query("""
         SELECT * FROM club_review
         WHERE clubId = :clubId
@@ -20,6 +21,7 @@ interface ClubReviewDao {
     """)
     fun getReviewsForClub(clubId: Long): Flow<List<ClubReviewEntity>>
 
+    //Returnează ratingul mediu pentru un club specificat
     @Query("""
         SELECT AVG(rating)
         FROM club_review
@@ -27,6 +29,7 @@ interface ClubReviewDao {
     """)
     fun getAverageRatingForClub(clubId: Long): Flow<Double?>
 
+    //Returnează numărul de reviewuri pentru un club specificat
     @Query("""
         SELECT COUNT(*)
         FROM club_review
@@ -34,6 +37,7 @@ interface ClubReviewDao {
     """)
     fun getReviewCountForClub(clubId: Long): Flow<Int>
 
+    //Returnează dacă un utilizator specificat a lasat un review la un club
     @Query("""
         SELECT EXISTS(
             SELECT 1 FROM club_review

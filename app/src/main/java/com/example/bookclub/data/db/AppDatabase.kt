@@ -28,7 +28,7 @@ import com.example.bookclub.data.db.dao.VoteDao
         InboxEntity::class,
         ClubReviewEntity::class
     ],
-    version = 5, // Versiunea schemei Room.
+    version = 6, // Versiunea schemei Room.
     exportSchema = true
 )
 @TypeConverters(Converters::class)

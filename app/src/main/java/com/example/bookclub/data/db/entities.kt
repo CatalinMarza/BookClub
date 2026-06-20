@@ -60,7 +60,7 @@ data class CommentEntity(
     val createdAt: Instant,
     val parentId: Long?
 )
-
+// Entitate pentru voturi
 @Entity(
     tableName = "vote",
     primaryKeys = ["commentId", "userId"],
@@ -72,7 +72,7 @@ data class VoteEntity(
     val value: Int,
     val createdAt: Instant
 )
-
+// Entitate pentru follow_user
 @Entity(
     tableName = "follow_user",
     primaryKeys = ["followerId", "following"],
@@ -82,7 +82,7 @@ data class FollowUserEntity(
     val followerId: Long,
     val following: Long
 )
-
+// Entitate pentru follow_book
 @Entity(
     tableName = "follow_book",
     primaryKeys = ["userId", "workId"],
@@ -93,6 +93,7 @@ data class FollowBookEntity(
     val workId: String
 )
 
+// Entitate pentru notificari
 @Entity(
     tableName = "inbox",
     indices = [Index("userId"), Index("isRead"), Index("createdAt")]
@@ -108,6 +109,7 @@ data class InboxEntity(
     val createdAt: Instant
 )
 
+// Entitate pentru club review
 @Entity(
     tableName = "club_review",
     indices = [
